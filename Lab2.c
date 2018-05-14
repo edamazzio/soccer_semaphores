@@ -147,8 +147,12 @@ int ask_for_ball(){
 int ask_for_cancha(char my_equipo){
   printf("Child %d asking for cancha\n", getpid());
   int got_cancha = 0;
+
+  //The "cancha" is 'a' by default
   sem_t cancha_id_sem = cancha_a_id_sem;
   int *cancha_id = cancha_a_id;
+
+  //If it's 'b', it's assigned to 'b'
   if (my_equipo == 'B'){
     cancha_id_sem = cancha_b_id_sem;
     cancha_id = cancha_b_id;
