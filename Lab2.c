@@ -203,4 +203,10 @@ void release_cancha(char equipo){
 /*TODO
 cambiar equipo -> team
 prototipos
+
+Issues:
+ - Semaforo ball no esta sirviendo. Varios procesos obtienen la bola al mismo tiempo
+ - El proceso x no puede obtener la cancha pues el proceso x la tiene. No tiene sentido que el mismo proceso no pueda obtener la cancha porque el mismo la tiene
+    - Posiblemente linea 150 crea un sem_t y al asignarlo no asigna el mismo semaforo sino que crea una copia. Puede ser esto.
+
 */
