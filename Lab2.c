@@ -54,7 +54,7 @@ int main(){
     }
   }
 
-  int match_time = 5;//5*60;
+  int match_time = 10;//5*60;
   sleep(match_time);
   sem_wait(&match_finished_sem);
   *match_finished = 1;
@@ -125,10 +125,11 @@ void play_soccer(char equipo){
 }
 
 void wait_for_ball(){
-  printf("Child %d waiting for ball\n", getpid());
+  //printf("Child %d waiting for ball\n", getpid());
+  srand(getpid());
   int tiempo_espera = rand() % 2 +1;
   sleep(tiempo_espera);
-  printf("Child %d waiting finished for ball\n", getpid());
+  //printf("Child %d waiting finished for ball\n", getpid());
 }
 
 int ask_for_ball(){
@@ -138,6 +139,9 @@ int ask_for_ball(){
   if(*bola_id == 0){
     *bola_id = getpid();
     got_ball = 1;
+    printf ("Player %d got ball\n", getpid());
+  }else{
+    printf ("Player %d COULDN'T get ball. Player %d has ball\n", getpid(), *bola_id);
   }
   sem_post(&bola_id_sem);
   //printf("Child %d request for ball = %d\n", getpid(), got_ball);
@@ -145,14 +149,9 @@ int ask_for_ball(){
 }
 
 int ask_for_cancha(char my_equipo){
-  printf("Child %d asking for cancha\n", getpid());
   int got_cancha = 0;
-
-  //The "cancha" is 'a' by default
   sem_t cancha_id_sem = cancha_a_id_sem;
   int *cancha_id = cancha_a_id;
-
-  //If it's 'b', it's assigned to 'b'
   if (my_equipo == 'B'){
     cancha_id_sem = cancha_b_id_sem;
     cancha_id = cancha_b_id;
@@ -162,9 +161,11 @@ int ask_for_cancha(char my_equipo){
   if(*cancha_id == 0){
     *cancha_id = getpid();
     got_cancha = 1;
+    printf ("Player %d from team %c got cancha\n", getpid(), my_equipo);
+  }else{
+    printf ("Player %d from team %c COULDN'T get cancha. Player %d has cancha\n", getpid(), my_equipo, *cancha_id);
   }
   sem_post(&cancha_id_sem);
-  printf("Child %d finished asking for cancha = %d\n", getpid(), got_cancha);
   return got_cancha;
 }
 
@@ -178,7 +179,7 @@ void score_goal(char my_equipo){
     enemy_equipo = 'A';
   }
   sem_wait(&cancha_goles_sem);
-  *cancha_goles++;
+  *cancha_goles +=1;
   printf("Child %d of team %c scored. Current score = %d\n", getpid(), my_equipo, *cancha_goles);
   sem_post(&cancha_goles_sem);
   release_ball();
@@ -200,17 +201,13 @@ void release_cancha(char equipo){
   }
   sem_wait(&cancha_sem);
   *cancha_id = 0;
+  printf("Cancha from equipo %c has been released by player %d\n", equipo, getpid());
   sem_post(&cancha_sem);
 }
 
 
 /*TODO
-cambiar equipo -> team
-prototipos
-
-Issues:
- - Semaforo ball no esta sirviendo. Varios procesos obtienen la bola al mismo tiempo
- - El proceso x no puede obtener la cancha pues el proceso x la tiene. No tiene sentido que el mismo proceso no pueda obtener la cancha porque el mismo la tiene
-    - Posiblemente linea 150 crea un sem_t y al asignarlo no asigna el mismo semaforo sino que crea una copia. Puede ser esto.
+ - cambiar spanglish
+ - hacer los semaforos en memoria compartida
 
 */
