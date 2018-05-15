@@ -6,6 +6,7 @@
 #include <semaphore.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <time.h>
 
 void open_existing_semaphores(void);
 void close_semaphores(void);
@@ -48,6 +49,7 @@ int main(){
   initialize_semaphores();
 
   int match_time = 5*60;
+  //int match_time = 1;
   int children_amount = 10;
   pid_t children_id[children_amount];
 
@@ -145,11 +147,12 @@ void play_soccer(char equipo){
     wait_for_ball();
     if(ask_for_ball()){
       for(int i=0;i<3;i++){
+        printf("--Cancha: Try %d of player %d to get cancha\n", i+1, getpid());
         if(ask_for_cancha(equipo)){
           score_goal(equipo);
           break;
         }else{
-          printf ("--Ball: Ball release by %d. Couldn't get cancha.\n", getpid());
+          printf ("--Ball: Ball release by %d. Couldn't get cancha.\n\n", getpid());
           release_ball();
         }
       }
@@ -212,12 +215,14 @@ int ask_for_cancha(char my_equipo){
     cancha_id = cancha_b_id;
     ////printf("Cancha equipo A seteada para ser pedida\n");
   }
-  if(*cancha_id == 0){
+  int random_num = rand()%4;
+  //printf ("--DEBUG: pid mod 4 = %d && rand mod 4 = %d\n", getpid()%4, random_num);
+  if(*cancha_id == 0 && getpid()%4 == random_num){
     *cancha_id = getpid();
     got_cancha = 1;
     printf ("--Cancha: Player %d from team %c got enemy cancha\n", getpid(), my_equipo);
   }else{
-    printf ("Player %d from team %c COULDN'T get cancha. Player %d has cancha\n", getpid(), my_equipo, *cancha_id);
+    printf ("--Cancha: Player %d from team %c COULDN'T get cancha\n", getpid(), my_equipo);
   }
   sem_post(cancha_sem);
   return got_cancha;
@@ -238,11 +243,25 @@ void score_goal(char my_equipo){
     sem_wait(cancha_goles_sem);
     cancha_goles = cancha_b_goles;
     enemy_equipo = 'B';
-
   }
-  *cancha_goles +=1;
-  sem_post(cancha_goles_sem);
-  printf("--Score: Player %d of team %c scored. Current score = A : %d\tB : %d\n", getpid(), my_equipo, get_score_a(), get_score_b());
+  printf("--Shoot: Player %d shoots!\n", getpid());
+
+  int scored = 1;
+  srand(time(0));
+  rand();
+
+  if (rand()%2 == 0){
+    scored = 0;
+  }
+  if (scored){
+    *cancha_goles +=1;
+    sem_post(cancha_goles_sem);
+    printf("--Score: Player %d of team %c scored. Current score = A : %d\tB : %d\n\n", getpid(), my_equipo, get_score_a(), get_score_b());
+  }
+  else{
+    sem_post(cancha_goles_sem);
+    printf("--Score: Player %d missed the shot\n\n", getpid());
+  }
   release_ball();
   release_cancha(enemy_equipo);
 }
